@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace : 이름 공간(group), 다른 mapper의 id와 중복 시 구분하기 위함 -->
+<mapper namespace="com.shinhan.dept">
+	<!-- DeptDTO에서 dept_id, dept_name을 department_id, department_name으로 매핑해주기 위해 설정 -->
+	<!-- DB 칼럼 이름과 Java의 field 이름이 다르다면 mapping 해주는 map을 정의해준다. -->
+	<resultMap type="deptVO" id="deptMap">
+		<result property="dept_id" column="department_id"/>
+		<result property="dept_name" column="department_name"/>
+	</resultMap>
+	<!-- resultType 대신 resultMap(DeptDTO field 이름과 DB 칼럼 이름이 다르기 때문에) -->
+	<select id="selectAll" resultMap="deptMap">
+		SELECT * FROM DEPARTMENTS ORDER BY DEPARTMENT_ID
+	</select>
+	<select id="selectById" parameterType="int" resultType="deptVO">
+		SELECT * FROM DEPARTMENTS WHERE DEPARTMENT_ID = #{dept_id}
+	</select>
+	<insert id="insert" parameterType="deptVO">
+		INSERT INTO DEPARTMENTS(department_id, department_name, manager_id, location_id)
+		VALUES(#{dept_id}, #{dept_name}, #{manager_id}, #{location_id})
+	</insert>
+	<update id="update" parameterType="deptVO">
+		UPDATE DEPARTMENTS
+		SET DEPARTMENT_NAME = #{dept_name},
+			MANAGER_ID = #{manager_id},
+			LOCATION_ID = #{location_id}
+		WHERE DEPARTMENT_ID = #{dept_id}
+	</update>
+	<delete id="delete" parameterType="int">
+		DELETE FROM DEPARTMENTS WHERE DEPARTMENT_ID = #{dept_id}
+	</delete>
+</mapper>

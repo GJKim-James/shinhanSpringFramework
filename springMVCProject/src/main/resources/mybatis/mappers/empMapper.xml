@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shinhan.emp">
+	<select id="selectAll" resultType="empVO">
+		SELECT * FROM EMPLOYEES ORDER BY EMPLOYEE_ID
+	</select>
+	
+	<select id="selectById" parameterType="int" resultType="empVO">
+		SELECT * FROM EMPLOYEES WHERE EMPLOYEE_ID = #{employee_id}
+	</select>
+	
+	<select id="selectByDeptId" parameterType="int" resultType="empVO">
+		SELECT * FROM EMPLOYEES
+		<if test="department_id != -1">
+			WHERE DEPARTMENT_ID = #{department_id}
+		</if>
+	</select>
+	
+	<select id="selectByJobId" parameterType="String" resultType="empVO">
+		SELECT * FROM EMPLOYEES
+		<if test="job_id != '-1'">
+			WHERE JOB_ID = #{job_id}
+		</if>
+	</select>
+	
+	<select id="selectBySalary" parameterType="int" resultType="empVO">
+		SELECT * FROM EMPLOYEES WHERE SALARY >= #{salary}
+	</select>
+	
+	<!-- map을 파라미터로 가져오기
+	map.put("department_id", 값) ==> mybatis가 map.get(department_id)
+	map.put("job_id", 값) ==> mybatis가 map.get(job_id)
+	map.put("salary", 값) ==> mybatis가 map.get(salary)
+	map.put("hire_date", 값) ==> mybatis가 map.get(hire_date)
+	 -->
+	<!-- 동적 SQL -->
+	<select id="selectByCondition" parameterType="Map" resultType="empVO">
+		SELECT * FROM EMPLOYEES
+		WHERE SALARY >= #{salary}
+		<if test="department_id != -1">
+			AND DEPARTMENT_ID = #{department_id}
+		</if>
+		<if test="job_id != '-1'">
+			AND JOB_ID = #{job_id}
+		</if>
+		<if test="hire_date != '1900-01-01'">
+			AND HIRE_DATE >= #{hire_date}
+		</if>
+	</select>
+<!-- 	<select id="selectByCondition" parameterType="Map" resultType="empVO"> -->
+<!-- 		SELECT * FROM EMPLOYEES -->
+<!-- 		WHERE ('-1' = #{department_id} or DEPARTMENT_ID = #{department_id}) -->
+<!-- 			  AND ('-1' = #{job_id} or JOB_ID = #{job_id}) -->
+<!-- 			  AND SALARY >= #{salary} AND HIRE_DATE >= #{hire_date} -->
+<!-- 	</select> -->
+	
+	<select id="selectByJobJoin" parameterType="String" resultType="com.shinhan.myapp.emp.EmpJoinDTO">
+		SELECT EMPLOYEE_ID, FIRST_NAME, SALARY, DEPARTMENT_NAME, CITY, COUNTRY_NAME, JOB_TITLE
+		FROM EMPLOYEES JOIN DEPARTMENTS USING (DEPARTMENT_ID)
+					   JOIN LOCATIONS USING (LOCATION_ID)
+					   JOIN COUNTRIES USING (COUNTRY_ID)
+					   JOIN JOBS USING (JOB_ID)
+		<if test="job_id != '-1'">
+			WHERE JOB_ID = #{job_id}
+		</if>
+	</select>
+	
+	<select id="selectByJobJoinMap" parameterType="String" resultType="Map">
+		SELECT EMPLOYEE_ID, FIRST_NAME, SALARY, DEPARTMENT_NAME, CITY, COUNTRY_NAME, JOB_TITLE
+		FROM EMPLOYEES JOIN DEPARTMENTS USING (DEPARTMENT_ID)
+					   JOIN LOCATIONS USING (LOCATION_ID)
+					   JOIN COUNTRIES USING (COUNTRY_ID)
+					   JOIN JOBS USING (JOB_ID)
+		<if test="job_id != '-1'">
+			WHERE JOB_ID = #{job_id}
+		</if>
+	</select>
+	
+	<!-- 여러 부서들의 직원 정보 조회(WHERE DEPARTMENT_ID IN (10, 20, 30)) -->
+	<select id="selectByArray" parameterType="List" resultType="empVO">
+		SELECT * FROM EMPLOYEES
+		WHERE DEPARTMENT_ID IN
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		ORDER BY 1
+	</select>
+	
+	<insert id="insert" parameterType="empVO">
+		INSERT INTO
+		EMPLOYEES(employee_id,
+				  first_name,
+				  last_name,
+				  email,
+				  phone_number,
+				  hire_date,
+				  job_id,
+				  salary,
+				  commission_pct,
+				  manager_id,
+				  department_id)
+		VALUES (
+				#{employee_id},
+				#{first_name},
+				#{last_name},
+				#{email},
+				#{phone_number},
+				#{hire_date},
+				#{job_id},
+				#{salary},
+				#{commission_pct},
+				<if test="manager_id == -1">
+					null,
+				</if>
+				<if test="manager_id != -1">
+					#{manager_id},
+				</if>
+				<if test="department_id == -1">
+					null	<!-- 부서 선택하지 않으면 JSP 페이지에서 -1이 온다. -1이면 null을 입력 -->
+				</if>
+				<if test="department_id != -1">
+					#{department_id}
+				</if>
+				)
+	</insert>
+	
+	<update id="update" parameterType="empVO">
+		UPDATE EMPLOYEES
+		SET FIRST_NAME = #{first_name},
+			LAST_NAME = #{last_name},
+			EMAIL = #{email},
+			PHONE_NUMBER = #{phone_number},
+			HIRE_DATE = #{hire_date},
+			JOB_ID = #{job_id},
+			SALARY = #{salary},
+			COMMISSION_PCT = #{commission_pct},
+			<if test="manager_id == -1">
+				MANAGER_ID = null,
+			</if>
+			<if test="manager_id != -1">
+				MANAGER_ID = #{manager_id},
+			</if>
+			<if test="department_id == -1">
+				DEPARTMENT_ID = null
+			</if>
+			<if test="department_id != -1">
+				DEPARTMENT_ID = #{department_id}
+			</if>
+		WHERE EMPLOYEE_ID = #{employee_id}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM EMPLOYEES WHERE EMPLOYEE_ID = #{employee_id}
+	</delete>
+</mapper>
